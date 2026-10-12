@@ -7,7 +7,6 @@
     <color name="splash_background">@color/ic_launcher_background</color>
 
     <!-- XuanYi Glass Start -->
-    <!-- 亮色：紫金玻璃 -->
     <color name="m3_sys_color_light_primary">#CC7C4DFF</color>
     <color name="m3_sys_color_light_onPrimary">#FFFFFFFF</color>
     <color name="m3_sys_color_light_primaryContainer">#99B39DDB</color>
@@ -29,11 +28,7 @@
     <color name="m3_sys_color_light_surfaceContainerHighest">#B3FFFFFF</color>
     <color name="m3_sys_color_light_surfaceContainerLow">#66FFFFFF</color>
     <color name="m3_sys_color_light_surfaceContainerLowest">#33FFFFFF</color>
-    <color name="m3_sys_color_light_inverseSurface">#FF313033</color>
-    <color name="m3_sys_color_light_inverseOnSurface">#FFF4EFF4</color>
-    <color name="m3_sys_color_light_inversePrimary">#CC7C4DFF</color>
 
-    <!-- 暗色：黑金玻璃 -->
     <color name="m3_sys_color_dark_primary">#CCD4AF37</color>
     <color name="m3_sys_color_dark_onPrimary">#FF000000</color>
     <color name="m3_sys_color_dark_primaryContainer">#99B39DDB</color>
@@ -55,9 +50,7 @@
     <color name="m3_sys_color_dark_surfaceContainerHighest">#CC2B2930</color>
     <color name="m3_sys_color_dark_surfaceContainerLow">#80121212</color>
     <color name="m3_sys_color_dark_surfaceContainerLowest">#40000000</color>
-    <color name="m3_sys_color_dark_inverseSurface">#FFE6E1E5</color>
-    <color name="m3_sys_color_dark_inverseOnSurface">#FF313033</color>
-    <color name="m3_sys_color_dark_inversePrimary">#CCD4AF37</color>
     <!-- XuanYi Glass End -->
+
 </resources>
 
