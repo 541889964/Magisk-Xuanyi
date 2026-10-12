@@ -1,0 +1,43 @@
+name: Build Magisk XuanYi
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Init Submodules
+        run: git submodule update --init --recursive
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Download NDK
+        run: ./build.py ndk
+      - name: Build Release
+        run: ./build.py -r all
+      - name: Commit APK
+        run: |
+          mkdir -p release
+          APK=$(ls out/*.apk | head -1)
+          cp "$APK" release/magisk-xuanyi.apk
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add release/magisk-xuanyi.apk
+          git commit -m "Update APK [skip ci]" || echo "no change"
+          git push
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: magisk-xuanyi
+          path: out/*.apk
