@@ -149,6 +149,21 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         var showWelcome by remember { mutableStateOf(true) }
 
             MagiskTheme {
+        val __base = androidx.compose.material3.MaterialTheme.colorScheme
+        androidx.compose.material3.MaterialTheme(
+            colorScheme = __base.copy(
+                background = __base.background.copy(alpha = 0.55f),
+                surface = __base.surface.copy(alpha = 0.65f),
+                surfaceVariant = __base.surfaceVariant.copy(alpha = 0.65f),
+                surfaceContainer = __base.surfaceContainer.copy(alpha = 0.60f),
+                surfaceContainerLow = __base.surfaceContainerLow.copy(alpha = 0.55f),
+                surfaceContainerLowest = __base.surfaceContainerLowest.copy(alpha = 0.55f),
+                surfaceContainerHigh = __base.surfaceContainerHigh.copy(alpha = 0.70f),
+                surfaceContainerHighest = __base.surfaceContainerHighest.copy(alpha = 0.75f),
+                surfaceTint = androidx.compose.ui.graphics.Color.Transparent
+            )
+        ) {
+
                 Box(modifier = Modifier.fillMaxSize()) {
 
             // [XuanYi] 背景图
@@ -327,6 +342,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 }
+        }
             }
         
         // [XuanYi-END]
@@ -482,3 +498,4 @@ private fun MainActivityDialogs(
         }
     }
 }
+
