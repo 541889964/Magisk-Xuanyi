@@ -111,15 +111,48 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         val initialTab = getInitialTab(intent)
 
         setContent {
+        val prefs = getSharedPreferences("xuanyi", android.content.Context.MODE_PRIVATE)
+        var bgAlpha by remember { mutableStateOf(prefs.getFloat("xuanyi_bg_alpha", 1.0f)) }
+        var bgBlur by remember { mutableStateOf(prefs.getFloat("xuanyi_bg_blur", 0f)) }
+        var showBgDialog by remember { mutableStateOf(false) }
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(
+                        id = com.topjohnwu.magisk.R.drawable.app_background
+                    ),
+                    contentDescription = null,
+                    modifier = androidx.compose.ui.Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0f)
+                                androidx.compose.ui.Modifier.blur(bgBlur.dp)
+                            else androidx.compose.ui.Modifier
+                        ),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    alpha = bgAlpha
+                )
                     val navigator = rememberNavigator(Route.Main)
                     CompositionLocalProvider(LocalNavigator provides navigator) {
                         HandleFlashIntent(navigator)
 
                         NavDisplay(
                             backStack = navigator.backStack,
-                            onBack = { navigator.pop() },
+                            onBack = { navigator.pop()
+
+                // [XuanYi] 背景调节悬浮按钮
+                androidx.compose.material3.FloatingActionButton(
+                    onClick = { showBgDialog = true },
+                    modifier = androidx.compose.ui.Modifier
+                        .align(androidx.compose.ui.Alignment.BottomEnd)
+                        .padding(16.dp),
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Settings,
+                        contentDescription = "背景调节"
+                    )
+                } },
                             entryDecorators = listOf(
                                 rememberSaveableStateHolderNavEntryDecorator(),
                                 rememberViewModelStoreNavEntryDecorator<Any>()
@@ -203,7 +236,51 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                     )
                 }
             }
-        }
+        
+        if (showBgDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showBgDialog = false },
+                title = { androidx.compose.material3.Text("背景调节") },
+                text = {
+                    androidx.compose.foundation.layout.Column(
+                        modifier = androidx.compose.ui.Modifier.padding(8.dp)
+                    ) {
+                        androidx.compose.material3.Text(
+                            "透明度: ${(bgAlpha * 100).toInt()}%"
+                        )
+                        androidx.compose.material3.Slider(
+                            value = bgAlpha,
+                            onValueChange = {
+                                bgAlpha = it
+                                prefs.edit().putFloat("xuanyi_bg_alpha", it).apply()
+                            },
+                            valueRange = 0f..1f
+                        )
+                        androidx.compose.foundation.layout.Spacer(
+                            modifier = androidx.compose.ui.Modifier.height(12.dp)
+                        )
+                        androidx.compose.material3.Text(
+                            "模糊度: ${bgBlur.toInt()}" +
+                                if (android.os.Build.VERSION.SDK_INT < 31) " (需 Android 12+)" else ""
+                        )
+                        androidx.compose.material3.Slider(
+                            value = bgBlur,
+                            onValueChange = {
+                                bgBlur = it
+                                prefs.edit().putFloat("xuanyi_bg_blur", it).apply()
+                            },
+                            valueRange = 0f..25f,
+                            enabled = android.os.Build.VERSION.SDK_INT >= 31
+                        )
+                    }
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = { showBgDialog = false }
+                    ) { androidx.compose.material3.Text("确定") }
+                }
+            )
+        }}
     }
 
     @Composable
@@ -352,3 +429,4 @@ private fun MainActivityDialogs(
         }
     }
 }
+
