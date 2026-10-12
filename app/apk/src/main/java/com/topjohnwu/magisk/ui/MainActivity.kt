@@ -62,6 +62,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import com.topjohnwu.magisk.core.R as CoreR
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity(), SplashScreenHost {
 
@@ -110,9 +142,150 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
 
         val initialTab = getInitialTab(intent)
 
-        setContent {
+        setContent { // [XuanYi-START]
+
+        val xuanyiPrefs = getSharedPreferences("xuanyi", android.content.Context.MODE_PRIVATE)
+        var bgAlpha by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_alpha", 0.40f)) }
+        var bgBlur  by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_blur", 0f)) }
+        var showBgPanel by remember { mutableStateOf(false) }
+        var showWelcome by remember { mutableStateOf(true) }
+        // [XuanYi-END]
+
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
+
+            // [XuanYi] 背景图（实时绑定 alpha / blur）
+            Image(
+                painter = painterResource(id = com.topjohnwu.magisk.R.drawable.app_background),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0.5f)
+                            Modifier.blur(bgBlur.dp)
+                        else Modifier
+                    ),
+                contentScale = ContentScale.Crop,
+                alpha = bgAlpha
+            )
+
+            // [XuanYi] 右下角悬浮按钮（渐变圆钮）
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp)
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+                            )
+                        )
+                    )
+                    .clickable { showBgPanel = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "◐", color = Color.White, fontSize = 24.sp)
+            }
+
+            // [XuanYi] 背景调节面板（实时刷新）
+            if (showBgPanel) {
+                AlertDialog(
+                    onDismissRequest = { showBgPanel = false },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "🎨", fontSize = 22.sp)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = "背景外观",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    },
+                    text = {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("透明度", fontWeight = FontWeight.Medium)
+                                Text(
+                                    text = "${(bgAlpha * 100).toInt()}%",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Slider(
+                                value = bgAlpha,
+                                onValueChange = {
+                                    bgAlpha = it
+                                    xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply()
+                                },
+                                valueRange = 0f..1f,
+                                steps = 19
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("模糊度", fontWeight = FontWeight.Medium)
+                                Text(
+                                    text = if (android.os.Build.VERSION.SDK_INT >= 31)
+                                        "${bgBlur.toInt()} dp"
+                                    else "需 Android 12+",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Slider(
+                                value = bgBlur,
+                                onValueChange = {
+                                    bgBlur = it
+                                    xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply()
+                                },
+                                valueRange = 0f..30f,
+                                steps = 29,
+                                enabled = android.os.Build.VERSION.SDK_INT >= 31
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "💡 拖动滑块即时生效，自动保存",
+                                    modifier = Modifier.padding(12.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            bgAlpha = 0.40f
+                            bgBlur = 0f
+                            xuanyiPrefs.edit()
+                                .putFloat("xuanyi_bg_alpha", 0.40f)
+                                .putFloat("xuanyi_bg_blur", 0f)
+                                .apply()
+                        }) { Text("重置") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showBgPanel = false }) { Text("完成") }
+                    }
+                )
+            }
+
+            // [XuanYi] 免责声明弹窗
+            if (showWelcome) {
+                XuanYiWelcomeDialog(onAccept = { showWelcome = false })
+            }
+
 
             androidx.compose.foundation.Image(
                 painter = androidx.compose.ui.res.painterResource(
