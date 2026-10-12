@@ -334,15 +334,6 @@ impl ManagerInfo {
     }
 
     fn get_manager(&mut self, daemon: &MagiskD, user: i32, mut install: bool) -> (i32, &str) {
-        // [PATCH] 强制白名单包名
-        {
-            let _pkg: &str = "com.xuanyi";
-            let _uid = self.get_package_uid(user, _pkg);
-            if _uid > 0 {
-                return (_uid, _pkg);
-            }
-        }
-
         let db_pkg = daemon.get_db_string(DbEntryKey::SuManager);
 
         // If database changed, always re-check files
@@ -382,7 +373,7 @@ impl ManagerInfo {
                 };
             }
             // orig APK is still the same
-            let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
+        // [CLEANED] let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
             return if uid < 0 {
                 (-1, "")
             } else {
@@ -417,7 +408,7 @@ impl ManagerInfo {
 
         match self.check_orig(user) {
             Status::Installed => {
-                let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
+        // [CLEANED] let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
                 return if uid < 0 {
                     (-1, "")
                 } else {
@@ -440,7 +431,7 @@ impl ManagerInfo {
 }
 
 impl MagiskD {
-    fn get_package_uid(&self, user: i32, pkg: &str) -> i32 {
+        // [CLEANED] fn get_package_uid(&self, user: i32, pkg: &str) -> i32 {
         let path = cstr::buf::default()
             .join_path(self.app_data_dir())
             .join_path_fmt(user)
