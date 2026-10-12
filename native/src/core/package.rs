@@ -373,7 +373,7 @@ impl ManagerInfo {
                 };
             }
             // orig APK is still the same
-        // [CLEANED] let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
+            let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
             return if uid < 0 {
                 (-1, "")
             } else {
@@ -408,7 +408,7 @@ impl ManagerInfo {
 
         match self.check_orig(user) {
             Status::Installed => {
-        // [CLEANED] let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
+                let uid = daemon.get_package_uid(user, APP_PACKAGE_NAME);
                 return if uid < 0 {
                     (-1, "")
                 } else {
@@ -431,7 +431,7 @@ impl ManagerInfo {
 }
 
 impl MagiskD {
-        // [CLEANED] fn get_package_uid(&self, user: i32, pkg: &str) -> i32 {
+    fn get_package_uid(&self, user: i32, pkg: &str) -> i32 {
         let path = cstr::buf::default()
             .join_path(self.app_data_dir())
             .join_path_fmt(user)
