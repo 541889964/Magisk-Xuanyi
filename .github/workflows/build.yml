@@ -1,0 +1,84 @@
+name: Build Magisk XuanYi
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Init Submodules
+        run: |
+          set -e
+          echo "=== .gitmodules ==="
+          cat .gitmodules || true
+
+          echo "=== 尝试标准方法 ==="
+          git submodule sync --recursive || true
+          git submodule update --init --recursive --depth 1 || true
+
+          echo "=== 检查并补齐缺失的 submodule ==="
+          python3 - <<'PYEOF'
+import configparser, os, subprocess
+cp = configparser.ConfigParser()
+cp.read('.gitmodules')
+for section in cp.sections():
+    path = cp.get(section, 'path')
+    url  = cp.get(section, 'url')
+    # 判断目录是否有内容
+    valid = os.path.isdir(path) and len(os.listdir(path)) > 0
+    if not valid:
+        print(f"[补齐] {path} <- {url}", flush=True)
+        subprocess.run(['rm', '-rf', path], check=False)
+        r = subprocess.run(['git', 'clone', '--depth', '1', url, path])
+        if r.returncode != 0:
+            print(f"[FAIL] {path}", flush=True)
+    else:
+        print(f"[OK] {path}", flush=True)
+PYEOF
+
+          echo "=== 最终 native/src/external 内容 ==="
+          ls -la native/src/external/ || true
+          echo "=== cxx-rs 目录 ==="
+          ls -la native/src/external/cxx-rs/ | head || true
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download NDK
+        run: ./build.py ndk
+
+      - name: Build Release
+        run: ./build.py -r all
+
+      - name: Commit APK
+        run: |
+          mkdir -p release
+          APK=$(ls out/*.apk | head -1)
+          cp "$APK" release/magisk-xuanyi.apk
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add release/magisk-xuanyi.apk
+          git commit -m "Update APK [skip ci]" || echo "no change"
+          git push
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: magisk-xuanyi
+          path: out/*.apk

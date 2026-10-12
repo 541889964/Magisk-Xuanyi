@@ -1,0 +1,6 @@
+out/
+logs/
+*.log
+*.zip
+.gradle/
+build/
