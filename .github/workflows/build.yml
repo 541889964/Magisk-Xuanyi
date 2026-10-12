@@ -14,52 +14,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
 
-      - name: Init Submodules
+      - name: Manual Submodule Clone
         run: |
           set -e
-          echo "=== .gitmodules ==="
-          cat .gitmodules || true
-
-          echo "=== 尝试标准方法 ==="
-          git submodule sync --recursive || true
-          git submodule update --init --recursive --depth 1 || true
-
-          echo "=== 检查并补齐缺失的 submodule ==="
-          python3 - <<'PYEOF'
-import configparser, os, subprocess
-cp = configparser.ConfigParser()
-cp.read('.gitmodules')
-for section in cp.sections():
-    path = cp.get(section, 'path')
-    url  = cp.get(section, 'url')
-    # 判断目录是否有内容
-    valid = os.path.isdir(path) and len(os.listdir(path)) > 0
-    if not valid:
-        print(f"[补齐] {path} <- {url}", flush=True)
-        subprocess.run(['rm', '-rf', path], check=False)
-        r = subprocess.run(['git', 'clone', '--depth', '1', url, path])
-        if r.returncode != 0:
-            print(f"[FAIL] {path}", flush=True)
-    else:
-        print(f"[OK] {path}", flush=True)
-PYEOF
-
-          echo "=== 最终 native/src/external 内容 ==="
-          ls -la native/src/external/ || true
-          echo "=== cxx-rs 目录 ==="
-          ls -la native/src/external/cxx-rs/ | head || true
+          clone_sm() {
+            rm -rf "$1"
+            mkdir -p "$(dirname "$1")"
+            git clone --depth 1 "$2" "$1"
+            echo "[OK] $1"
+          }
+          clone_sm native/src/external/selinux https://github.com/topjohnwu/selinux.git
+          clone_sm native/src/external/lz4 https://github.com/lz4/lz4.git
+          clone_sm native/src/external/libcxx https://github.com/topjohnwu/libcxx.git
+          clone_sm native/src/external/cxx-rs https://github.com/topjohnwu/cxx.git
+          clone_sm native/src/external/lsplt https://github.com/LSPosed/LSPlt.git
+          clone_sm native/src/external/system_properties https://github.com/topjohnwu/system_properties.git
+          clone_sm native/src/external/crt0 https://github.com/topjohnwu/crt0.git
+          echo "=== 检查 ==="
+          ls native/src/external/
+          test -f native/src/external/cxx-rs/Cargo.toml && echo "cxx-rs OK"
+          test -d native/src/external/lz4/lib && echo "lz4 OK"
 
       - uses: actions/setup-java@v3
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Download NDK
         run: ./build.py ndk
@@ -74,7 +59,7 @@ PYEOF
           cp "$APK" release/magisk-xuanyi.apk
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add release/magisk-xuanyi.apk
+          git add -f release/magisk-xuanyi.apk
           git commit -m "Update APK [skip ci]" || echo "no change"
           git push
 
