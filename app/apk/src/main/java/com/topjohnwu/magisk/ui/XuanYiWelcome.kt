@@ -19,12 +19,8 @@ import androidx.compose.ui.unit.sp
 
 private val RAINBOW = Brush.linearGradient(
     colors = listOf(
-        Color(0xFFFF0000),
-        Color(0xFFFF7F00),
-        Color(0xFFFFFF00),
-        Color(0xFF00FF00),
-        Color(0xFF00FFFF),
-        Color(0xFF0000FF),
+        Color(0xFFFF0000), Color(0xFFFF7F00), Color(0xFFFFFF00),
+        Color(0xFF00FF00), Color(0xFF00FFFF), Color(0xFF0000FF),
         Color(0xFF8B00FF)
     )
 )
@@ -36,11 +32,7 @@ fun XuanYiWelcomeDialog(onAccept: () -> Unit) {
         title = {
             Text(
                 text = "🌈 免责声明 · 应用介绍 🌈",
-                style = TextStyle(
-                    brush = RAINBOW,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                style = TextStyle(brush = RAINBOW, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             )
         },
         text = {
