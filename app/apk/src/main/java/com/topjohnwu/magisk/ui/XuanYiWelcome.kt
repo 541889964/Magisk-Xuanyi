@@ -10,8 +10,59 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val RAINBOW = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFFF0000),
+        Color(0xFFFF7F00),
+        Color(0xFFFFFF00),
+        Color(0xFF00FF00),
+        Color(0xFF00FFFF),
+        Color(0xFF0000FF),
+        Color(0xFF8B00FF)
+    )
+)
+
+@Composable
+fun XuanYiWelcomeDialog(onAccept: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { },
+        title = {
+            Text(
+                text = "🌈 免责声明 · 应用介绍 🌈",
+                style = TextStyle(
+                    brush = RAINBOW,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 520.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = WELCOME_TEXT,
+                    style = MaterialTheme.typography.bodySmall,
+                    lineHeight = 20.sp
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onAccept) {
+                Text("我已阅读并同意")
+            }
+        }
+    )
+}
 
 private val WELCOME_TEXT = """
 ═══════════════════════════════
@@ -166,34 +217,3 @@ A6：因为 Root 涉及系统底层，风险较高，希望用户在充分了解
 
 ═══════════════════════════════
 """.trimIndent()
-
-@Composable
-fun XuanYiWelcomeDialog(onAccept: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = { },
-        title = {
-            Text(
-                text = "免责声明 · 应用介绍",
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 520.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = WELCOME_TEXT,
-                    style = MaterialTheme.typography.bodySmall,
-                    lineHeight = 20.sp
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onAccept) {
-                Text("我已阅读并同意")
-            }
-        }
-    )
-}
