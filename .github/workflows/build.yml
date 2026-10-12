@@ -32,8 +32,6 @@ jobs:
           clone_sm native/src/external/lsplt https://github.com/LSPosed/LSPlt.git
           clone_sm native/src/external/system_properties https://github.com/topjohnwu/system_properties.git
           clone_sm native/src/external/crt0 https://github.com/topjohnwu/crt0.git
-          echo "=== 检查 ==="
-          ls native/src/external/
           test -f native/src/external/cxx-rs/Cargo.toml && echo "cxx-rs OK"
           test -d native/src/external/lz4/lib && echo "lz4 OK"
 
