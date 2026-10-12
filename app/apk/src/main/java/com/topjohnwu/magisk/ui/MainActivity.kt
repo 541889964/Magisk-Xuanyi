@@ -75,11 +75,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableFloatStateOf
@@ -146,7 +144,6 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         val initialTab = getInitialTab(intent)
 
         setContent { // [XuanYi-START]
-
         val xuanyiPrefs = getSharedPreferences("xuanyi", android.content.Context.MODE_PRIVATE)
         var bgAlpha by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_alpha", 1.0f)) }
         var bgBlur by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_blur", 0f)) }
@@ -176,8 +173,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
 
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-
-            // [XuanYi] 背景图
+            // [XuanYi] 背景图（支持本地图片）
             if (bgBitmap != null) {
                 Image(
                     bitmap = asImageBitmap(bgBitmap!!),
@@ -200,7 +196,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 悬浮按钮（右上角）
+            // [XuanYi] 右上角悬浮按钮（不挡底栏）
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -306,7 +302,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         }
                     )
                 
-            // [XuanYi] 面板
+            // [XuanYi] 背景调节面板
             if (showBgPanel) {
                 AlertDialog(
                     onDismissRequest = { showBgPanel = false },
@@ -317,13 +313,28 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                 Text("透明度", fontWeight = FontWeight.Medium)
                                 Text("${(bgAlpha * 100).toInt()}%", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Slider(value = bgAlpha, onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() }, valueRange = 0f..1f, steps = 19)
+                            Slider(
+                                value = bgAlpha,
+                                onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() },
+                                valueRange = 0f..1f,
+                                steps = 19
+                            )
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("模糊度", fontWeight = FontWeight.Medium)
-                                Text(if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 12+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 12+",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
-                            Slider(value = bgBlur, onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() }, valueRange = 0f..30f, steps = 29, enabled = android.os.Build.VERSION.SDK_INT >= 31)
+                            Slider(
+                                value = bgBlur,
+                                onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() },
+                                valueRange = 0f..30f,
+                                steps = 29,
+                                enabled = android.os.Build.VERSION.SDK_INT >= 31
+                            )
                         }
                     },
                     confirmButton = {
