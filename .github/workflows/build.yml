@@ -23,7 +23,6 @@ jobs:
             rm -rf "$1"
             mkdir -p "$(dirname "$1")"
             git clone --depth 1 "$2" "$1"
-            echo "[OK] $1"
           }
           clone_sm native/src/external/selinux https://github.com/topjohnwu/selinux.git
           clone_sm native/src/external/lz4 https://github.com/lz4/lz4.git
@@ -32,8 +31,6 @@ jobs:
           clone_sm native/src/external/lsplt https://github.com/LSPosed/LSPlt.git
           clone_sm native/src/external/system_properties https://github.com/topjohnwu/system_properties.git
           clone_sm native/src/external/crt0 https://github.com/topjohnwu/crt0.git
-          test -f native/src/external/cxx-rs/Cargo.toml && echo "cxx-rs OK"
-          test -d native/src/external/lz4/lib && echo "lz4 OK"
 
       - uses: actions/setup-java@v3
         with:
@@ -50,18 +47,32 @@ jobs:
       - name: Build Release
         run: ./build.py -r all
 
+      - name: Find Release APK
+        run: |
+          echo "=== 所有 APK ==="
+          find out -name "*.apk" -type f
+          echo ""
+          echo "=== release APK 详情 ==="
+          ls -la out/*release*.apk out/**/*release*.apk 2>/dev/null || true
+
       - name: Commit APK
         run: |
           mkdir -p release
-          APK=$(ls out/*.apk | head -1)
+          # 优先选 release，避免 debug
+          APK=$(find out -name "*release*.apk" -type f | head -1)
+          if [ -z "$APK" ]; then
+            echo "[WARN] 找不到 *release*.apk，尝试任意 APK"
+            APK=$(find out -name "*.apk" -type f | head -1)
+          fi
+          echo "选中: $APK"
           cp "$APK" release/magisk-xuanyi.apk
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add -f release/magisk-xuanyi.apk
           git commit -m "Update APK [skip ci]" || echo "no change"
-          git push
+          git push || echo "push 失败（artifact 仍可下载）"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: magisk-xuanyi
-          path: out/*.apk
+          name: magisk-xuanyi-release
+          path: release/magisk-xuanyi.apk
