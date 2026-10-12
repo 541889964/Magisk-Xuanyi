@@ -75,9 +75,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableFloatStateOf
@@ -88,7 +90,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -142,44 +146,76 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         val initialTab = getInitialTab(intent)
 
         setContent { // [XuanYi-START]
+
         val xuanyiPrefs = getSharedPreferences("xuanyi", android.content.Context.MODE_PRIVATE)
-        var bgAlpha by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_alpha", 0.45f)) }
+        var bgAlpha by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_alpha", 1.0f)) }
         var bgBlur by remember { mutableFloatStateOf(xuanyiPrefs.getFloat("xuanyi_bg_blur", 0f)) }
         var showBgPanel by remember { mutableStateOf(false) }
         var showWelcome by remember { mutableStateOf(true) }
+        var bgUri by remember { mutableStateOf<String?>(xuanyiPrefs.getString("xuanyi_bg_uri", null)) }
+        var bgBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+        val __ctx = LocalContext.current
+        LaunchedEffect(bgUri) {
+            bgBitmap = try {
+                bgUri?.let { u ->
+                    __ctx.contentResolver.openInputStream(android.net.Uri.parse(u))?.use { s ->
+                        android.graphics.BitmapFactory.decodeStream(s)
+                    }
+                }
+            } catch (e: Exception) { null }
+        }
+        val __imgLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+        ) { uri: android.net.Uri? ->
+            if (uri != null) {
+                try { __ctx.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (e: Exception) {}
+                bgUri = uri.toString()
+                xuanyiPrefs.edit().putString("xuanyi_bg_uri", uri.toString()).apply()
+            }
+        }
 
             MagiskTheme {
-        val __base = androidx.compose.material3.MaterialTheme.colorScheme
-        androidx.compose.material3.MaterialTheme(
-            colorScheme = __base.copy(
-                background = __base.background.copy(alpha = 0.55f),
-                surface = __base.surface.copy(alpha = 0.65f),
-                surfaceVariant = __base.surfaceVariant.copy(alpha = 0.65f),
-                surfaceContainer = __base.surfaceContainer.copy(alpha = 0.60f),
-                surfaceContainerLow = __base.surfaceContainerLow.copy(alpha = 0.55f),
-                surfaceContainerLowest = __base.surfaceContainerLowest.copy(alpha = 0.55f),
-                surfaceContainerHigh = __base.surfaceContainerHigh.copy(alpha = 0.70f),
-                surfaceContainerHighest = __base.surfaceContainerHighest.copy(alpha = 0.75f),
-                surfaceTint = androidx.compose.ui.graphics.Color.Transparent
-            )
-        ) {
-
                 Box(modifier = Modifier.fillMaxSize()) {
 
             // [XuanYi] 背景图
-            Image(
-                painter = painterResource(id = com.topjohnwu.magisk.R.drawable.app_background),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(
-                        if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0.5f)
-                            Modifier.blur(bgBlur.dp)
-                        else Modifier
+            if (bgBitmap != null) {
+                Image(
+                    bitmap = asImageBitmap(bgBitmap!!),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().then(
+                        if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0.5f) Modifier.blur(bgBlur.dp) else Modifier
                     ),
-                contentScale = ContentScale.Crop,
-                alpha = bgAlpha
-            )
+                    contentScale = ContentScale.Crop,
+                    alpha = bgAlpha
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = com.topjohnwu.magisk.R.drawable.app_background),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().then(
+                        if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0.5f) Modifier.blur(bgBlur.dp) else Modifier
+                    ),
+                    contentScale = ContentScale.Crop,
+                    alpha = bgAlpha
+                )
+            }
+
+            // [XuanYi] 悬浮按钮（右上角）
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 80.dp, end = 16.dp)
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
+                    )))
+                    .clickable { showBgPanel = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "◐", color = Color.White, fontSize = 22.sp)
+            }
 
                     val navigator = rememberNavigator(Route.Main)
                     CompositionLocalProvider(LocalNavigator provides navigator) {
@@ -270,71 +306,28 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         }
                     )
                 
-
-            // [XuanYi] FAB（最上层）
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(24.dp)
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
-                            )
-                        )
-                    )
-                    .clickable { showBgPanel = true },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "◐", color = Color.White, fontSize = 24.sp)
-            }
-
+            // [XuanYi] 面板
             if (showBgPanel) {
                 AlertDialog(
                     onDismissRequest = { showBgPanel = false },
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "🎨", fontSize = 22.sp)
-                            Spacer(Modifier.width(10.dp))
-                            Text("背景外观", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                        }
-                    },
+                    title = { Text("🎨 背景外观", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) },
                     text = {
                         Column {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("透明度", fontWeight = FontWeight.Medium)
                                 Text("${(bgAlpha * 100).toInt()}%", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Slider(
-                                value = bgAlpha,
-                                onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() },
-                                valueRange = 0f..1f, steps = 19
-                            )
+                            Slider(value = bgAlpha, onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() }, valueRange = 0f..1f, steps = 19)
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("模糊度", fontWeight = FontWeight.Medium)
-                                Text(
-                                    if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 Android 12+",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Text(if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 12+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Slider(
-                                value = bgBlur,
-                                onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() },
-                                valueRange = 0f..30f, steps = 29,
-                                enabled = android.os.Build.VERSION.SDK_INT >= 31
-                            )
+                            Slider(value = bgBlur, onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() }, valueRange = 0f..30f, steps = 29, enabled = android.os.Build.VERSION.SDK_INT >= 31)
                         }
                     },
                     confirmButton = {
-                        TextButton(onClick = {
-                            bgAlpha = 0.45f; bgBlur = 0f
-                            xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", 0.45f).putFloat("xuanyi_bg_blur", 0f).apply()
-                        }) { Text("重置") }
+                        TextButton(onClick = { __imgLauncher.launch("image/*") }) { Text("从本地选图") }
                     },
                     dismissButton = {
                         TextButton(onClick = { showBgPanel = false }) { Text("完成") }
@@ -342,7 +335,6 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 }
-        }
             }
         
         // [XuanYi-END]
@@ -498,4 +490,3 @@ private fun MainActivityDialogs(
         }
     }
 }
-
