@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
             // [XuanYi] 背景图
             if (bgBitmap != null) {
                 Image(
-                    bitmap = asImageBitmap(bgBitmap!!),
+                    bitmap = bgBitmap!!.asImageBitmap(),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize().then(
                         if (android.os.Build.VERSION.SDK_INT >= 31 && bgBlur > 0.5f) Modifier.blur(bgBlur.dp) else Modifier
@@ -490,3 +490,4 @@ private fun MainActivityDialogs(
         }
     }
 }
+
