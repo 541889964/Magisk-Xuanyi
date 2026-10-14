@@ -196,25 +196,29 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 右上角悬浮按钮（直接链式调用 background，避免 .then 类型推断问题）
+            // [XuanYi] 右上角 FAB（外层 Box 定位，不用 .align）
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 80.dp, end = 16.dp)
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 80.dp, end = 16.dp)
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
+                                )
                             )
                         )
-                    )
-                    .clickable { showBgPanel = true },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "◐", color = Color.White, fontSize = 22.sp)
+                        .clickable { showBgPanel = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "◐", color = Color.White, fontSize = 22.sp)
+                }
             }
 
                     val navigator = rememberNavigator(Route.Main)
@@ -306,7 +310,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         }
                     )
                 
-            // [XuanYi] 背景调节面板
+            // [XuanYi] 面板
             if (showBgPanel) {
                 AlertDialog(
                     onDismissRequest = { showBgPanel = false },
