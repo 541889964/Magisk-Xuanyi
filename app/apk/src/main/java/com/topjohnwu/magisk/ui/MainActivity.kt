@@ -310,7 +310,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         }
                     )
                 
-            // [XuanYi] 面板
+            // [XuanYi] 背景调节面板
             if (showBgPanel) {
                 AlertDialog(
                     onDismissRequest = { showBgPanel = false },
