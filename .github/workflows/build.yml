@@ -1,17 +1,43 @@
 name: Build Magisk XuanYi
+
 on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Cache Cargo registry（只缓存下载，不缓存 target）
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
 
       - name: Manual Submodule Clone
         run: |
@@ -26,9 +52,13 @@ jobs:
           clone_sm native/src/external/crt0 https://github.com/topjohnwu/crt0.git
 
       - uses: actions/setup-java@v3
-        with: { java-version: "21", distribution: "temurin" }
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
       - uses: actions/setup-python@v4
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
 
       - name: Download NDK
         run: ./build.py ndk
@@ -52,3 +82,4 @@ jobs:
         with:
           name: magisk-xuanyi-release
           path: release/magisk-xuanyi.apk
+          retention-days: 30
