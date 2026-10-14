@@ -196,7 +196,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 右上角悬浮按钮
+            // [XuanYi] 右上角悬浮按钮（Modifier 作用域已修正）
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
