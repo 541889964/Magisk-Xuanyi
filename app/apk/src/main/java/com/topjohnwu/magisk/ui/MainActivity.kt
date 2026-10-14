@@ -173,7 +173,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
 
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-            // [XuanYi] 背景图（支持本地图片）
+            // [XuanYi] 背景图
             if (bgBitmap != null) {
                 Image(
                     bitmap = asImageBitmap(bgBitmap!!),
@@ -196,17 +196,23 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 右上角悬浮按钮（不挡底栏）
+            // [XuanYi] 右上角悬浮按钮
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 80.dp, end = 16.dp)
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
-                    )))
+                    .then(
+                        Modifier.background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
+                                )
+                            )
+                        )
+                    )
                     .clickable { showBgPanel = true },
                 contentAlignment = Alignment.Center
             ) {
@@ -313,36 +319,17 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                 Text("透明度", fontWeight = FontWeight.Medium)
                                 Text("${(bgAlpha * 100).toInt()}%", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Slider(
-                                value = bgAlpha,
-                                onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() },
-                                valueRange = 0f..1f,
-                                steps = 19
-                            )
+                            Slider(value = bgAlpha, onValueChange = { bgAlpha = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_alpha", it).apply() }, valueRange = 0f..1f, steps = 19)
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("模糊度", fontWeight = FontWeight.Medium)
-                                Text(
-                                    if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 12+",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Text(if (android.os.Build.VERSION.SDK_INT >= 31) "${bgBlur.toInt()} dp" else "需 12+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Slider(
-                                value = bgBlur,
-                                onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() },
-                                valueRange = 0f..30f,
-                                steps = 29,
-                                enabled = android.os.Build.VERSION.SDK_INT >= 31
-                            )
+                            Slider(value = bgBlur, onValueChange = { bgBlur = it; xuanyiPrefs.edit().putFloat("xuanyi_bg_blur", it).apply() }, valueRange = 0f..30f, steps = 29, enabled = android.os.Build.VERSION.SDK_INT >= 31)
                         }
                     },
-                    confirmButton = {
-                        TextButton(onClick = { __imgLauncher.launch("image/*") }) { Text("从本地选图") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showBgPanel = false }) { Text("完成") }
-                    }
+                    confirmButton = { TextButton(onClick = { __imgLauncher.launch("image/*") }) { Text("从本地选图") } },
+                    dismissButton = { TextButton(onClick = { showBgPanel = false }) { Text("完成") } }
                 )
             }
 }
