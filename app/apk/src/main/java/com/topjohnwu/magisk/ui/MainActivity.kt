@@ -196,20 +196,18 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 右上角悬浮按钮（Modifier 作用域已修正）
+            // [XuanYi] 右上角悬浮按钮（直接链式调用 background，避免 .then 类型推断问题）
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 80.dp, end = 16.dp)
                     .size(48.dp)
                     .clip(CircleShape)
-                    .then(
-                        Modifier.background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
-                                )
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f)
                             )
                         )
                     )
