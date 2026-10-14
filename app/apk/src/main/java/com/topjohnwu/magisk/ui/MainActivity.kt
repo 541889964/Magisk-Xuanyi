@@ -196,7 +196,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                 )
             }
 
-            // [XuanYi] 右上角 FAB（外层 Box 定位，不用 .align）
+            // [XuanYi] 右上角 FAB（外层 Box 定位，不使用 .align）
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopEnd
